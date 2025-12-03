@@ -190,7 +190,9 @@ best_cluster_name = CLUSTER_NAMES.get(best_cluster_key, f"Cluster {best_cluster_
 # 4. 結果表示画面
 # ---------------------------------------------------------
 st.title(" テラオカ電子のMoodleコース レコメンドアプリ")
-st.markdown("# 『タスク(課題)占い』")
+st.markdown("# 『タスク（課題）占い』")
+
+st.markdown("---")
 st.markdown("### 🎓 レコメンド結果")
 
 col1_container = st.container()
