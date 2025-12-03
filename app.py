@@ -286,7 +286,7 @@ st.markdown("---")
 st.caption("💡 スライダーを調整すると、リアルタイムでおすすめが変わります！")
 
 # デバッグ情報（開発時のみ表示）
-with st.expander("🔧 デバッグ情報"):
+with st.expander("🔧 デバッグ情報：開発時のみ表示"):
     st.write(f"**フォント適用状況:** {FONT_SUCCESS}")
     st.write(f"**使用フォント:** {FONT_NAME}")
     st.write(f"**利用可能なフォント数:** {len(fm.fontManager.ttflist)}")
