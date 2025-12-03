@@ -288,6 +288,7 @@ with st.expander("🔧 デバッグ情報"):
         keyword in f.name.lower() for keyword in ['gothic', 'mincho', 'jp', 'japanese', 'cjk', 'noto', 'ipa']
     )]
     if jp_fonts:
-        st.write(f"**検出された日本語フォント:** {', '.join(set(jp_fonts)[:10])}")
+        unique_jp_fonts = list(set(jp_fonts))[:10]
+        st.write(f"**検出された日本語フォント:** {', '.join(unique_jp_fonts)}")
     else:
         st.write("**検出された日本語フォント:** なし")
