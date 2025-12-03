@@ -120,12 +120,13 @@ best_cluster_name = CLUSTER_NAMES.get(best_cluster_key, f"Cluster {best_cluster_
 # 4. 結果表示画面
 # ---------------------------------------------------------
 st.markdown("# テラオカ電子のMoodleコース レコメンドアプリ")
+st.markdown("# 『タスク占い』")
 st.title("🎓 レコメンド結果")
 
 
-col1, col2 = st.columns([2, 1])
+col1, col2 = st.columns([1, 2])
 
-with col1:
+with col2:
     st.subheader(f"あなたは... **「{best_cluster_name}」** タイプです！")
     st.info(CLUSTER_DESC.get(best_cluster_key, ""))
 
@@ -146,7 +147,7 @@ with col1:
                 st.write(f"**内容:** {row.get('評価の根拠と特記事項', '詳細なし')}")
                 st.write(f"**分野スコア:** 理論度 {row['Factor1_Score']:.2f} / 基礎度 {row['Factor2_Score']:.2f}")
 
-with col2:
+with col1:
     st.markdown("### 🗺️ コースマップ")
 
     # 散布図の描画
