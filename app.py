@@ -132,11 +132,11 @@ st.sidebar.header("🔍 あなたの興味・関心")
 st.sidebar.write("以下の質問に答えて、あなたにぴったりの学習コースを見つけましょう。")
 
 # フォント状態を表示
-if FONT_SUCCESS:
-    st.sidebar.success(f"✅ 日本語表示: {FONT_NAME}")
-else:
-    st.sidebar.error(f"⚠️ 日本語フォント未検出: {FONT_NAME}")
-    st.sidebar.info("📝 グラフは英語表示になります")
+# if FONT_SUCCESS:
+#    st.sidebar.success(f"✅ 日本語表示: {FONT_NAME}")
+# else:
+#    st.sidebar.error(f"⚠️ 日本語フォント未検出: {FONT_NAME}")
+#    st.sidebar.info("📝 グラフは英語表示になります")
 
 st.sidebar.markdown("---")
 
@@ -157,6 +157,14 @@ q2 = st.sidebar.slider(
 st.sidebar.caption("生成AI・実践     ⇔    教科書・基礎")
 
 user_vector = np.array([q1, q2])
+
+# サイドバーに画像を表示
+st.sidebar.markdown("---")
+image_path = "teraoka.png"
+if os.path.exists(image_path):
+    st.sidebar.image(image_path, use_column_width=True)
+else:
+    st.sidebar.warning(f"⚠️ 画像ファイル '{image_path}' が見つかりません。")
 
 # ---------------------------------------------------------
 # 3. メインロジック：マッチング
