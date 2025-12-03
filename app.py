@@ -145,7 +145,7 @@ q1 = st.sidebar.slider(
     min_value=-5.0, max_value=3.0, value=0.0, step=0.5,
     help="左：Web・システム開発 ／ 右：数学・データ分析"
 )
-st.sidebar.caption("Web・アプリ開発   ⇔   数学・データ分析")
+st.sidebar.caption("Web・アプリ開発    ⇔    数学・データ分析")
 
 st.sidebar.markdown("---")
 
@@ -154,7 +154,7 @@ q2 = st.sidebar.slider(
     min_value=-2.0, max_value=1.5, value=0.0, step=0.5,
     help="左：最新AI活用・実践 ／ 右：教科書・基礎理解"
 )
-st.sidebar.caption("生成AI・実践   ⇔   教科書・基礎")
+st.sidebar.caption("生成AI・実践     ⇔    教科書・基礎")
 
 user_vector = np.array([q1, q2])
 
