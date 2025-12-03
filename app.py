@@ -13,29 +13,31 @@ st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout
 # ---------------------------------------------------------
 # 日本語フォント設定
 # ---------------------------------------------------------
-# Seabornを使用する場合、テーマ設定でフォント設定が上書きされることがあるため、
-# 明示的にSeaborn側にもフォントを指定する必要があります。
+# 【重要】Seabornのテーマ設定はMatplotlibのフォント設定を上書きしてしまうため、
+# 必ず「Seabornの設定」→「日本語フォントの設定」の順序で実行する必要があります。
+
+# 1. まずSeabornの基本スタイルを設定（ここで一度フォント設定がリセットされる場合があります）
+sns.set_theme(style="whitegrid")
 
 FONT_AVAILABLE = False
 
 try:
     import japanize_matplotlib
+    # 2. Seaborn設定の「後」に実行することで、日本語フォントを確実に適用して上書きする
     japanize_matplotlib.japanize()
-    # 【修正点】sns.set()は非推奨のためsns.set_theme()を使用
-    sns.set_theme(font="IPAexGothic", style="whitegrid")
     FONT_AVAILABLE = True
-    # 成功時はトーストを表示（デバッグ用、不要ならコメントアウト可）
     # st.toast("日本語フォント(japanize_matplotlib)を適用しました", icon="✅")
 except ImportError:
     import matplotlib.font_manager as fm
-    # フォントの優先順位リスト（Mac, Windows, Linux対応）
+    # フォントの優先順位リスト
     fonts_list = [
         'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', 
-        'TakaoGothic', 'IPAGothic', 'IPAexGothic', 'Noto Sans CJK JP', 'Noto Sans JP'
+        'TakaoGothic', 'IPAGothic', 'IPAexGothic', 'Noto Sans CJK JP', 'Noto Sans JP',
+        'VL Gothic', 'Sazanami Gothic', 'MS Gothic'
     ]
     
     # 利用可能なフォントを探す
-    available_fonts = [f.name for f in fm.fontManager.ttflist]
+    available_fonts = {f.name for f in fm.fontManager.ttflist}
     target_font = None
     for font in fonts_list:
         if font in available_fonts:
@@ -43,17 +45,15 @@ except ImportError:
             break
             
     if target_font:
-        # Matplotlibのデフォルト設定
+        # 見つかったフォントを適用
         plt.rcParams['font.family'] = target_font
-        # 【修正点】sns.set()は非推奨のためsns.set_theme()を使用
-        sns.set_theme(font=target_font, style="whitegrid")
         FONT_AVAILABLE = True
         # st.toast(f"システムフォント '{target_font}' を適用しました", icon="✅")
     else:
         FONT_AVAILABLE = False
         st.toast("日本語フォントが見つかりませんでした。英語モードで表示します。", icon="⚠️")
 
-# マイナス記号の文字化け対策（Seaborn設定後念のため再設定）
+# マイナス記号の文字化け対策（最後に行う）
 plt.rcParams['axes.unicode_minus'] = False
 
 # ---------------------------------------------------------
@@ -227,7 +227,6 @@ with col2_container:
         ax.set_ylabel("生成AI・応用 <---> 基礎・教科書")
         ax.set_title("あなたの立ち位置")
         # 凡例も日本語で表示するために再設定
-        # sns.set_theme()で設定したフォントが継承されるはずだが、念のためプロパティを渡す
         ax.legend(prop={'family': plt.rcParams['font.family']})
     else:
         ax.set_xlabel("Web <---> Theory")
