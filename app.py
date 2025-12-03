@@ -124,9 +124,9 @@ st.markdown("# 『タスク占い』")
 st.title("🎓 レコメンド結果")
 
 
-col1, col2 = st.columns([1, 2])
+col1, col2 = st.columns([1, 1])
 
-with col2:
+with col1:
     st.subheader(f"あなたは... **「{best_cluster_name}」** タイプです！")
     st.info(CLUSTER_DESC.get(best_cluster_key, ""))
 
@@ -147,7 +147,7 @@ with col2:
                 st.write(f"**内容:** {row.get('評価の根拠と特記事項', '詳細なし')}")
                 st.write(f"**分野スコア:** 理論度 {row['Factor1_Score']:.2f} / 基礎度 {row['Factor2_Score']:.2f}")
 
-with col1:
+with col2:
     st.markdown("### 🗺️ コースマップ")
 
     # 散布図の描画
