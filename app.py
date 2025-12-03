@@ -221,7 +221,7 @@ with col2_container:
         ax.scatter(
             cluster_data['Factor1_Score'], 
             cluster_data['Factor2_Score'],
-            alpha=0.2, s=120, color=colors[i % len(colors)],
+            alpha=0.8, s=120, color=colors[i % len(colors)],
             label=f'Cluster {cluster_id}', edgecolors='gray', linewidths=0.5
         )
 
