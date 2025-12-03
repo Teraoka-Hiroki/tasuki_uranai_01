@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+import matplotlib.font_manager as fm
 
 # ---------------------------------------------------------
 # ページ設定
@@ -11,49 +12,62 @@ import os
 st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout="wide")
 
 # ---------------------------------------------------------
-# 日本語フォント設定
+# 日本語フォント設定（修正版）
 # ---------------------------------------------------------
-# 【重要】Seabornのテーマ設定はMatplotlibのフォント設定を上書きしてしまうため、
-# 必ず「Seabornの設定」→「日本語フォントの設定」の順序で実行する必要があります。
+def configure_japanese_font():
+    """
+    日本語フォントを適用し、成功したかどうかを返す関数。
+    Seabornのテーマ設定にもフォントを明示的に渡すことで文字化けを防ぐ。
+    """
+    # 1. japanize_matplotlib (最優先)
+    try:
+        import japanize_matplotlib
+        japanize_matplotlib.japanize()
+        # 【重要】Seabornのテーマ設定にフォント名を明示的に渡す
+        sns.set_theme(style="whitegrid", font="IPAexGothic")
+        return True, "IPAexGothic"
+    except ImportError:
+        pass
 
-# 1. まずSeabornの基本スタイルを設定（ここで一度フォント設定がリセットされる場合があります）
-sns.set_theme(style="whitegrid")
-
-FONT_AVAILABLE = False
-
-try:
-    import japanize_matplotlib
-    # 2. Seaborn設定の「後」に実行することで、日本語フォントを確実に適用して上書きする
-    japanize_matplotlib.japanize()
-    FONT_AVAILABLE = True
-    # st.toast("日本語フォント(japanize_matplotlib)を適用しました", icon="✅")
-except ImportError:
-    import matplotlib.font_manager as fm
-    # フォントの優先順位リスト
-    fonts_list = [
-        'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', 
-        'TakaoGothic', 'IPAGothic', 'IPAexGothic', 'Noto Sans CJK JP', 'Noto Sans JP',
-        'VL Gothic', 'Sazanami Gothic', 'MS Gothic'
+    # 2. システムフォント探索（japanize_matplotlibがない場合のバックアップ）
+    target_fonts = [
+        'Noto Sans CJK JP', 'Noto Sans JP', 'Hiragino Sans', 
+        'Hiragino Kaku Gothic ProN', 'Yu Gothic', 'Meiryo', 
+        'TakaoGothic', 'IPAGothic', 'IPAexGothic', 'VL Gothic', 'MS Gothic'
     ]
     
-    # 利用可能なフォントを探す
+    # システムにインストールされているフォント一覧を取得
     available_fonts = {f.name for f in fm.fontManager.ttflist}
-    target_font = None
-    for font in fonts_list:
+    
+    found_font = None
+    for font in target_fonts:
         if font in available_fonts:
-            target_font = font
+            found_font = font
             break
             
-    if target_font:
-        # 見つかったフォントを適用
-        plt.rcParams['font.family'] = target_font
-        FONT_AVAILABLE = True
-        # st.toast(f"システムフォント '{target_font}' を適用しました", icon="✅")
-    else:
-        FONT_AVAILABLE = False
-        st.toast("日本語フォントが見つかりませんでした。英語モードで表示します。", icon="⚠️")
+    if found_font:
+        # Matplotlibのデフォルト設定を更新
+        plt.rcParams['font.family'] = found_font
+        # Seabornのテーマ設定にもフォントを適用
+        sns.set_theme(style="whitegrid", font=found_font)
+        return True, found_font
 
-# マイナス記号の文字化け対策（最後に行う）
+    # 3. フォントが見つからない場合
+    # 英語設定のままにするが、最低限Seabornのスタイルは適用
+    sns.set_theme(style="whitegrid")
+    return False, None
+
+# 設定を実行
+FONT_AVAILABLE, USED_FONT = configure_japanese_font()
+
+# デバッグ用メッセージ（不要ならコメントアウト）
+if FONT_AVAILABLE:
+    # st.toast(f"日本語フォント適用中: {USED_FONT}", icon="✅")
+    pass
+else:
+    st.toast("日本語フォントが見つかりませんでした。英語モードで表示します。", icon="⚠️")
+
+# マイナス記号の文字化け対策
 plt.rcParams['axes.unicode_minus'] = False
 
 # ---------------------------------------------------------
@@ -87,7 +101,6 @@ def create_dummy_csv():
 def load_data():
     csv_file = 'course_learning_path.csv'
     if not os.path.exists(csv_file):
-        # ファイルがない場合はダミーを作成
         return create_dummy_csv()
     try:
         df = pd.read_csv(csv_file)
@@ -221,13 +234,13 @@ with col2_container:
     ax.axhline(0, color='gray', linestyle='--')
     ax.axvline(0, color='gray', linestyle='--')
     
-    # 軸ラベルの設定（フォント利用可否で切り替え）
+    # 軸ラベルの設定
     if FONT_AVAILABLE:
         ax.set_xlabel("Web・システム <---> 理論・数学")
         ax.set_ylabel("生成AI・応用 <---> 基礎・教科書")
         ax.set_title("あなたの立ち位置")
-        # 凡例も日本語で表示するために再設定
-        ax.legend(prop={'family': plt.rcParams['font.family']})
+        # 凡例の設定（フォントプロパティを再指定してダメ押し）
+        ax.legend(prop={'family': USED_FONT})
     else:
         ax.set_xlabel("Web <---> Theory")
         ax.set_ylabel("GenAI <---> Basic")
