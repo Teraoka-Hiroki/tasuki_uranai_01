@@ -249,7 +249,7 @@ with col2_container:
     
     # ラベルとタイトル（日本語フォントの状態に応じて切り替え）
     if FONT_SUCCESS:
-        ax.set_xlabel("Web・システム ⟵ ⟶ 理論・数学", fontsize=13, fontweight='bold')
+        ax.set_xlabel("Web・システム ⇔ 理論・数学", fontsize=13, fontweight='bold')
         ax.set_ylabel("生成AI・応用 ⟵ ⟶ 基礎・教科書", fontsize=13, fontweight='bold')
         ax.set_title("あなたの立ち位置とおすすめコース", fontsize=15, fontweight='bold', pad=20)
     else:
