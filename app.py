@@ -8,12 +8,25 @@ import seaborn as sns
 st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout="wide")
 
 # 日本語フォント対応（環境に合わせて適宜変更してください）
-# Streamlit Cloud等ではjapanize_matplotlibが便利ですが、ない場合は英語ラベルになります
+# Streamlit Cloud等では japanize_matplotlib が便利なので優先使用
 try:
     import japanize_matplotlib
+    japanize_matplotlib.japanize()  # matplotlib の日本語化（フォント等を自動設定）
     FONT_AVAILABLE = True
-except ImportError:
-    FONT_AVAILABLE = False
+except Exception:
+    import matplotlib.font_manager as fm
+    preferred_fonts = [
+        'Yu Gothic UI', 'Meiryo', 'Yu Gothic', 'MS Gothic',
+        'Noto Sans CJK JP', 'TakaoGothic'
+    ]
+    installed = {f.name for f in fm.fontManager.ttflist}
+    selected = next((f for f in preferred_fonts if f in installed), None)
+    if selected:
+        plt.rcParams['font.family'] = selected
+        FONT_AVAILABLE = True
+    else:
+        # フォントが見つからなければ日本語非対応モードで続行
+        FONT_AVAILABLE = False
 
 # ---------------------------------------------------------
 # 1. データ読み込みと初期設定
@@ -119,7 +132,7 @@ best_cluster_name = CLUSTER_NAMES.get(best_cluster_key, f"Cluster {best_cluster_
 # ---------------------------------------------------------
 # 4. 結果表示画面
 # ---------------------------------------------------------
-st.markdown("# テラオカ電子のMoodleコース レコメンドアプリ")
+st.markdown("## テラオカ電子のMoodleコース レコメンドアプリ")
 st.markdown("# 『タスク占い』")
 st.title("🎓 レコメンド結果")
 
