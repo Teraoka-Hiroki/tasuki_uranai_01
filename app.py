@@ -221,7 +221,7 @@ with col2_container:
         ax.scatter(
             cluster_data['Factor1_Score'], 
             cluster_data['Factor2_Score'],
-            alpha=0.4, s=120, color=colors[i % len(colors)],
+            alpha=0.2, s=120, color=colors[i % len(colors)],
             label=f'Cluster {cluster_id}', edgecolors='gray', linewidths=0.5
         )
 
@@ -249,12 +249,12 @@ with col2_container:
     
     # ラベルとタイトル（日本語フォントの状態に応じて切り替え）
     if FONT_SUCCESS:
-        ax.set_xlabel("Web・システム ⇔ 理論・数学", fontsize=13, fontweight='bold')
-        ax.set_ylabel("生成AI・応用 ⟵ ⟶ 基礎・教科書", fontsize=13, fontweight='bold')
+        ax.set_xlabel("Web・システム  ⇔  理論・数学", fontsize=13, fontweight='bold')
+        ax.set_ylabel("生成AI・応用  ⇔  基礎・教科書", fontsize=13, fontweight='bold')
         ax.set_title("あなたの立ち位置とおすすめコース", fontsize=15, fontweight='bold', pad=20)
     else:
-        ax.set_xlabel("Web/System ⟵ ⟶ Theory/Math", fontsize=13, fontweight='bold')
-        ax.set_ylabel("GenAI/Applied ⟵ ⟶ Basic/Textbook", fontsize=13, fontweight='bold')
+        ax.set_xlabel("Web/System   ⇔   Theory/Math", fontsize=13, fontweight='bold')
+        ax.set_ylabel("GenAI/Applied   ⇔   Basic/Textbook", fontsize=13, fontweight='bold')
         ax.set_title("Your Position & Recommended Courses", fontsize=15, fontweight='bold', pad=20)
     
     # 凡例
