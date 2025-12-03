@@ -142,19 +142,19 @@ st.sidebar.markdown("---")
 
 q1 = st.sidebar.slider(
     "Q1. 興味があるのはどっち？",
-    min_value=-3.0, max_value=3.0, value=0.0, step=0.5,
+    min_value=-5.0, max_value=3.0, value=0.0, step=0.5,
     help="左：Web・システム開発 ／ 右：数学・データ分析"
 )
-st.sidebar.caption("Web・アプリ開発 ⟵ 　 ⟶ 数学・データ分析")
+st.sidebar.caption("Web・アプリ開発   ⇔   数学・データ分析")
 
 st.sidebar.markdown("---")
 
 q2 = st.sidebar.slider(
     "Q2. 学習スタイルの好みは？",
-    min_value=-3.0, max_value=3.0, value=0.0, step=0.5,
+    min_value=-2.0, max_value=1.5, value=0.0, step=0.5,
     help="左：最新AI活用・実践 ／ 右：教科書・基礎理解"
 )
-st.sidebar.caption("生成AI・実践 ⟵ 　 ⟶ 教科書・基礎")
+st.sidebar.caption("生成AI・実践   ⇔   教科書・基礎")
 
 user_vector = np.array([q1, q2])
 
@@ -249,8 +249,8 @@ with col2_container:
     
     # ラベルとタイトル（日本語フォントの状態に応じて切り替え）
     if FONT_SUCCESS:
-        ax.set_xlabel("Web・システム  ⇔  理論・数学", fontsize=13, fontweight='bold')
-        ax.set_ylabel("生成AI・応用  ⇔  基礎・教科書", fontsize=13, fontweight='bold')
+        ax.set_xlabel("Web・アプリ開発   ⇔   数学・データ分析", fontsize=13, fontweight='bold')
+        ax.set_ylabel("生成AI・実践   ⇔   教科書・基礎", fontsize=13, fontweight='bold')
         ax.set_title("あなたの立ち位置とおすすめコース", fontsize=15, fontweight='bold', pad=20)
     else:
         ax.set_xlabel("Web/System   ⇔   Theory/Math", fontsize=13, fontweight='bold')
