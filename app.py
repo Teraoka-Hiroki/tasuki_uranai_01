@@ -10,7 +10,7 @@ st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout
 # 日本語フォント対応（環境に合わせて自動設定）
 try:
     import japanize_matplotlib
-    japanize_matplotlib.japanize()  # matplotlib 日本語化
+    japanize_matplotlib.japanize()  # matplotlib 日本語化（優先）
     FONT_AVAILABLE = True
 except Exception:
     import matplotlib as mpl
@@ -18,33 +18,35 @@ except Exception:
     # マイナス記号の文字化け対策
     mpl.rcParams['axes.unicode_minus'] = False
 
+    # 優先フォントリスト（Windows優先、Noto等も含む）
     preferred_fonts = [
         'Yu Gothic UI', 'Meiryo', 'Yu Gothic', 'MS Gothic',
-        'Noto Sans CJK JP', 'Noto Sans CJK JP Regular', 'TakaoGothic', 'IPAPGothic'
+        'Noto Sans CJK JP', 'IPAPGothic', 'TakaoGothic'
     ]
 
-    installed = {f.name: f.fname for f in fm.fontManager.ttflist}
-    selected = None
-    # 完全一致で探索
-    for fname in preferred_fonts:
-        if fname in installed:
-            mpl.rcParams['font.family'] = fname
-            selected = fname
-            break
+    # インストール済フォント名セット
+    installed_names = {f.name for f in fm.fontManager.ttflist}
 
-    # 部分一致で探索（例: "Meiryo" が "Meiryo UI" として報告される場合など）
-    if not selected:
+    # 見つかった優先フォントを sans-serif リストとして登録（複数候補を渡す）
+    available = [name for name in preferred_fonts if name in installed_names]
+    if available:
+        mpl.rcParams['font.family'] = 'sans-serif'
+        mpl.rcParams['font.sans-serif'] = available
+        FONT_AVAILABLE = True
+    else:
+        # 完全一致候補が無い場合、フォントリストを走査して日本語らしい名前を探索して設定
+        jp_font = None
         for f in fm.fontManager.ttflist:
             lname = f.name.lower()
-            for kw in ['meiryo', 'yu gothic', 'noto', 'takao', 'ipa']:
-                if kw in lname:
-                    mpl.rcParams['font.family'] = f.name
-                    selected = f.name
-                    break
-            if selected:
+            if any(k in lname for k in ['meiryo', 'yu gothic', 'noto', 'ipa', 'takao', 'ms gothic']):
+                jp_font = f.name
                 break
-
-    FONT_AVAILABLE = bool(selected)
+        if jp_font:
+            mpl.rcParams['font.family'] = jp_font
+            FONT_AVAILABLE = True
+        else:
+            # 見つからなければ日本語非対応モードで続行（Streamlit テキストは問題なし）
+            FONT_AVAILABLE = False
 
 # ---------------------------------------------------------
 # 1. データ読み込みと初期設定
