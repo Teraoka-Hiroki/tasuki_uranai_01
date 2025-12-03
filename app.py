@@ -6,14 +6,26 @@ import seaborn as sns
 import os
 
 # ---------------------------------------------------------
+# ページ設定
+# ---------------------------------------------------------
+st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout="wide")
+
+# ---------------------------------------------------------
 # 日本語フォント設定
 # ---------------------------------------------------------
-# Streamlit CloudやLinux環境での文字化けを防ぐための設定
+# Seabornを使用する場合、テーマ設定でフォント設定が上書きされることがあるため、
+# 明示的にSeaborn側にもフォントを指定する必要があります。
+
+FONT_AVAILABLE = False
+
 try:
     import japanize_matplotlib
     japanize_matplotlib.japanize()
+    # 【修正点】sns.set()は非推奨のためsns.set_theme()を使用
+    sns.set_theme(font="IPAexGothic", style="whitegrid")
     FONT_AVAILABLE = True
-    st.toast("日本語フォント(japanize_matplotlib)を適用しました", icon="✅")
+    # 成功時はトーストを表示（デバッグ用、不要ならコメントアウト可）
+    # st.toast("日本語フォント(japanize_matplotlib)を適用しました", icon="✅")
 except ImportError:
     import matplotlib.font_manager as fm
     # フォントの優先順位リスト（Mac, Windows, Linux対応）
@@ -31,25 +43,22 @@ except ImportError:
             break
             
     if target_font:
+        # Matplotlibのデフォルト設定
         plt.rcParams['font.family'] = target_font
+        # 【修正点】sns.set()は非推奨のためsns.set_theme()を使用
+        sns.set_theme(font=target_font, style="whitegrid")
         FONT_AVAILABLE = True
-        st.toast(f"システムフォント '{target_font}' を適用しました", icon="✅")
+        # st.toast(f"システムフォント '{target_font}' を適用しました", icon="✅")
     else:
         FONT_AVAILABLE = False
         st.toast("日本語フォントが見つかりませんでした。英語モードで表示します。", icon="⚠️")
 
-# マイナス記号の文字化け対策
+# マイナス記号の文字化け対策（Seaborn設定後念のため再設定）
 plt.rcParams['axes.unicode_minus'] = False
-
-# ---------------------------------------------------------
-# ページ設定
-# ---------------------------------------------------------
-st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout="wide")
 
 # ---------------------------------------------------------
 # 0. ダミーデータ生成（CSVがない場合のフォールバック）
 # ---------------------------------------------------------
-# 実際の運用時はこの関数は不要ですが、動作確認用に残しておきます
 def create_dummy_csv():
     data = {
         'Cluster': [0, 0, 1, 1, 2, 2, 3, 3, 4, 4],
@@ -218,6 +227,7 @@ with col2_container:
         ax.set_ylabel("生成AI・応用 <---> 基礎・教科書")
         ax.set_title("あなたの立ち位置")
         # 凡例も日本語で表示するために再設定
+        # sns.set_theme()で設定したフォントが継承されるはずだが、念のためプロパティを渡す
         ax.legend(prop={'family': plt.rcParams['font.family']})
     else:
         ax.set_xlabel("Web <---> Theory")
