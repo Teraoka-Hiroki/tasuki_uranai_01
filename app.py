@@ -7,26 +7,44 @@ import seaborn as sns
 # ページ設定
 st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout="wide")
 
-# 日本語フォント対応（環境に合わせて適宜変更してください）
-# Streamlit Cloud等では japanize_matplotlib が便利なので優先使用
+# 日本語フォント対応（環境に合わせて自動設定）
 try:
     import japanize_matplotlib
-    japanize_matplotlib.japanize()  # matplotlib の日本語化（フォント等を自動設定）
+    japanize_matplotlib.japanize()  # matplotlib 日本語化
     FONT_AVAILABLE = True
 except Exception:
+    import matplotlib as mpl
     import matplotlib.font_manager as fm
+    # マイナス記号の文字化け対策
+    mpl.rcParams['axes.unicode_minus'] = False
+
     preferred_fonts = [
         'Yu Gothic UI', 'Meiryo', 'Yu Gothic', 'MS Gothic',
-        'Noto Sans CJK JP', 'TakaoGothic'
+        'Noto Sans CJK JP', 'Noto Sans CJK JP Regular', 'TakaoGothic', 'IPAPGothic'
     ]
-    installed = {f.name for f in fm.fontManager.ttflist}
-    selected = next((f for f in preferred_fonts if f in installed), None)
-    if selected:
-        plt.rcParams['font.family'] = selected
-        FONT_AVAILABLE = True
-    else:
-        # フォントが見つからなければ日本語非対応モードで続行
-        FONT_AVAILABLE = False
+
+    installed = {f.name: f.fname for f in fm.fontManager.ttflist}
+    selected = None
+    # 完全一致で探索
+    for fname in preferred_fonts:
+        if fname in installed:
+            mpl.rcParams['font.family'] = fname
+            selected = fname
+            break
+
+    # 部分一致で探索（例: "Meiryo" が "Meiryo UI" として報告される場合など）
+    if not selected:
+        for f in fm.fontManager.ttflist:
+            lname = f.name.lower()
+            for kw in ['meiryo', 'yu gothic', 'noto', 'takao', 'ipa']:
+                if kw in lname:
+                    mpl.rcParams['font.family'] = f.name
+                    selected = f.name
+                    break
+            if selected:
+                break
+
+    FONT_AVAILABLE = bool(selected)
 
 # ---------------------------------------------------------
 # 1. データ読み込みと初期設定
