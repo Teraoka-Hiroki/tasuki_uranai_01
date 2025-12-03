@@ -2,9 +2,9 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-import os
 import matplotlib.font_manager as fm
+import os
+from pathlib import Path
 
 # ---------------------------------------------------------
 # ページ設定
@@ -12,61 +12,57 @@ import matplotlib.font_manager as fm
 st.set_page_config(page_title="Moodleコース レコメンドアプリ", layout="wide")
 
 # ---------------------------------------------------------
-# 日本語フォント設定（修正版）
+# 日本語フォント設定（最も確実な方法）
 # ---------------------------------------------------------
-def configure_japanese_font():
+@st.cache_resource
+def setup_japanese_font():
     """
-    日本語フォントを適用し、成功したかどうかを返す関数。
-    より確実な方法で日本語フォントを設定する。
+    日本語フォントを設定する関数
+    複数の方法を試して、確実に日本語を表示できるようにする
     """
-    # フォントキャッシュをリフレッシュ
-    fm._load_fontmanager(try_read_cache=False)
-    
-    # 優先順位付きフォントリスト
-    target_fonts = [
-        'Noto Sans CJK JP', 'Noto Sans JP', 'IPAexGothic', 'IPAGothic',
-        'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', 
-        'Meiryo', 'MS Gothic', 'TakaoGothic', 'VL Gothic', 'DejaVu Sans'
-    ]
-    
-    # システムにインストールされているフォント一覧を取得
-    available_fonts = {f.name for f in fm.fontManager.ttflist}
-    
-    # 利用可能なフォントを探す
-    found_font = None
-    for font in target_fonts:
-        if font in available_fonts:
-            found_font = font
-            break
-    
-    if found_font:
-        # Matplotlibのグローバル設定
-        plt.rcParams['font.sans-serif'] = [found_font] + plt.rcParams['font.sans-serif']
-        plt.rcParams['font.family'] = 'sans-serif'
-        plt.rcParams['axes.unicode_minus'] = False
-        return True, found_font
-    
-    # japanize_matplotlibを試す（フォールバック）
+    # Method 1: japanize-matplotlibを試す
     try:
         import japanize_matplotlib
         japanize_matplotlib.japanize()
         plt.rcParams['axes.unicode_minus'] = False
-        return True, "japanize_matplotlib"
+        return True, "japanize-matplotlib"
     except ImportError:
         pass
     
-    # フォントが見つからない場合も最低限の設定
+    # Method 2: システムフォントを探して設定
+    # フォントキャッシュを再構築
+    fm._load_fontmanager(try_read_cache=False)
+    
+    japanese_fonts = [
+        'Noto Sans CJK JP',
+        'Noto Sans JP', 
+        'IPAexGothic',
+        'IPAGothic',
+        'Hiragino Sans',
+        'Hiragino Kaku Gothic ProN',
+        'Yu Gothic',
+        'Meiryo',
+        'MS Gothic',
+        'TakaoGothic',
+        'VL Gothic',
+        'Noto Sans Mono CJK JP'
+    ]
+    
+    available_fonts = set([f.name for f in fm.fontManager.ttflist])
+    
+    for font_name in japanese_fonts:
+        if font_name in available_fonts:
+            plt.rcParams['font.family'] = font_name
+            plt.rcParams['font.sans-serif'] = [font_name] + plt.rcParams.get('font.sans-serif', [])
+            plt.rcParams['axes.unicode_minus'] = False
+            return True, font_name
+    
+    # Method 3: DejaVu Sansをフォールバックとして設定（英語のみ）
+    plt.rcParams['font.family'] = 'DejaVu Sans'
     plt.rcParams['axes.unicode_minus'] = False
-    return False, None
+    return False, "DejaVu Sans (英語のみ)"
 
-# 設定を実行
-FONT_AVAILABLE, USED_FONT = configure_japanese_font()
-
-# デバッグ用メッセージ
-if FONT_AVAILABLE:
-    st.sidebar.success(f"✅ 日本語フォント: {USED_FONT}")
-else:
-    st.sidebar.warning("⚠️ 日本語フォントが見つかりません")
+FONT_SUCCESS, FONT_NAME = setup_japanese_font()
 
 # ---------------------------------------------------------
 # 0. ダミーデータ生成（CSVがない場合のフォールバック）
@@ -134,6 +130,13 @@ CLUSTER_DESC = {
 # ---------------------------------------------------------
 st.sidebar.header("🔍 あなたの興味・関心")
 st.sidebar.write("以下の質問に答えて、あなたにぴったりの学習コースを見つけましょう。")
+
+# フォント状態を表示
+if FONT_SUCCESS:
+    st.sidebar.success(f"✅ 日本語表示: {FONT_NAME}")
+else:
+    st.sidebar.error(f"⚠️ 日本語フォント未検出: {FONT_NAME}")
+    st.sidebar.info("📝 グラフは英語表示になります")
 
 st.sidebar.markdown("---")
 
@@ -206,57 +209,85 @@ col2_container = st.container()
 with col2_container:
     st.markdown("### 🗺️ コースマップ")
 
-    # 新しいFigureを作成し、フォント設定を明示的に適用
-    fig, ax = plt.subplots(figsize=(10, 8))
+    # グラフ作成
+    fig, ax = plt.subplots(figsize=(12, 9))
     
-    # 再度フォント設定を確認（念のため）
-    if FONT_AVAILABLE and USED_FONT:
-        plt.rcParams['font.sans-serif'] = [USED_FONT] + plt.rcParams['font.sans-serif']
-
-    # 全コースのプロット
-    for cluster_id in df['Cluster'].unique():
+    # カラーパレット
+    colors = ['#ADD8E6', '#FFA07A', '#90EE90', '#FFB6C1', '#DDA0DD']
+    
+    # 全クラスターをプロット
+    for i, cluster_id in enumerate(sorted(df['Cluster'].unique())):
         cluster_data = df[df['Cluster'] == cluster_id]
         ax.scatter(
             cluster_data['Factor1_Score'], 
             cluster_data['Factor2_Score'],
-            alpha=0.4, s=100, label=f'Cluster {cluster_id}'
+            alpha=0.4, s=120, color=colors[i % len(colors)],
+            label=f'Cluster {cluster_id}', edgecolors='gray', linewidths=0.5
         )
 
-    # 推奨コース（強調表示）
+    # 推奨コース（赤色で強調）
     if not target_courses.empty:
         ax.scatter(
             target_courses['Factor1_Score'], 
             target_courses['Factor2_Score'],
-            color='red', s=200, marker='o', 
-            label='推奨コース', zorder=5, edgecolors='darkred', linewidths=2
+            color='red', s=250, marker='o', 
+            label='Recommended Courses' if not FONT_SUCCESS else '推奨コース',
+            zorder=5, edgecolors='darkred', linewidths=2.5
         )
 
-    # ユーザーの位置
+    # ユーザーの位置（金色の星）
     ax.scatter(
         user_vector[0], user_vector[1],
-        color='gold', s=500, marker='*', edgecolor='black', linewidths=2,
-        label='あなた', zorder=10
+        color='gold', s=600, marker='*', edgecolor='black', linewidths=2.5,
+        label='You' if not FONT_SUCCESS else 'あなた',
+        zorder=10
     )
 
     # 軸と補助線
-    ax.axhline(0, color='gray', linestyle='--', alpha=0.5)
-    ax.axvline(0, color='gray', linestyle='--', alpha=0.5)
+    ax.axhline(0, color='gray', linestyle='--', alpha=0.5, linewidth=1)
+    ax.axvline(0, color='gray', linestyle='--', alpha=0.5, linewidth=1)
     
-    # ラベルとタイトルの設定
-    ax.set_xlabel("Web・システム ⟵　⟶ 理論・数学", fontsize=12, fontweight='bold')
-    ax.set_ylabel("生成AI・応用 ⟵　⟶ 基礎・教科書", fontsize=12, fontweight='bold')
-    ax.set_title("あなたの立ち位置とおすすめコース", fontsize=14, fontweight='bold', pad=20)
+    # ラベルとタイトル（日本語フォントの状態に応じて切り替え）
+    if FONT_SUCCESS:
+        ax.set_xlabel("Web・システム ⟵　⟶ 理論・数学", fontsize=13, fontweight='bold')
+        ax.set_ylabel("生成AI・応用 ⟵　⟶ 基礎・教科書", fontsize=13, fontweight='bold')
+        ax.set_title("あなたの立ち位置とおすすめコース", fontsize=15, fontweight='bold', pad=20)
+    else:
+        ax.set_xlabel("Web/System ⟵　⟶ Theory/Math", fontsize=13, fontweight='bold')
+        ax.set_ylabel("GenAI/Applied ⟵　⟶ Basic/Textbook", fontsize=13, fontweight='bold')
+        ax.set_title("Your Position & Recommended Courses", fontsize=15, fontweight='bold', pad=20)
     
-    # 凡例の設定
-    ax.legend(loc='best', frameon=True, shadow=True, fontsize=10)
+    # 凡例
+    ax.legend(loc='upper left', frameon=True, shadow=True, fontsize=11, 
+              framealpha=0.9, edgecolor='black')
     
-    # グリッドの設定
-    ax.grid(True, alpha=0.3, linestyle=':', linewidth=0.5)
+    # グリッド
+    ax.grid(True, alpha=0.3, linestyle=':', linewidth=0.8)
     
-    # 余白の調整
+    # 軸の範囲を設定
+    ax.set_xlim(-5, 3)
+    ax.set_ylim(-2, 1.5)
+    
+    # 余白調整
     plt.tight_layout()
     
     st.pyplot(fig)
+    plt.close()
 
 st.markdown("---")
 st.caption("💡 スライダーを調整すると、リアルタイムでおすすめが変わります！")
+
+# デバッグ情報（開発時のみ表示）
+with st.expander("🔧 デバッグ情報"):
+    st.write(f"**フォント適用状況:** {FONT_SUCCESS}")
+    st.write(f"**使用フォント:** {FONT_NAME}")
+    st.write(f"**利用可能なフォント数:** {len(fm.fontManager.ttflist)}")
+    
+    # 日本語フォントのリストを表示
+    jp_fonts = [f.name for f in fm.fontManager.ttflist if any(
+        keyword in f.name.lower() for keyword in ['gothic', 'mincho', 'jp', 'japanese', 'cjk', 'noto', 'ipa']
+    )]
+    if jp_fonts:
+        st.write(f"**検出された日本語フォント:** {', '.join(set(jp_fonts)[:10])}")
+    else:
+        st.write("**検出された日本語フォント:** なし")
